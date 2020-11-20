@@ -19,11 +19,21 @@ app_ui <- function(request) {
                              accept=c('.rds')),
                    'Filter comparisons',
                    radioButtons('plot_type_comp', 'Choose plot type',
-                                choices = c('Volcano plot' = 'volcano',
-                                            'Heatmap' = 'heatmap'))
+                                choices = c('Volcano plot' = 'vulcano',
+                                            'Heatmap' = 'heatmap')),
+                   conditionalPanel('input.plot_type_comp == "vulcano"',
+                   uiOutput('choose_contrast')
+                   )
                  ),
-                 mainPanel('Table',
-                           'Volcano plot')
+                 mainPanel(
+                   tabsetPanel(
+                     tabPanel('Table',
+                              dataTableOutput('data_all_table')
+                     ),
+                     tabPanel('Plots',
+                              plotOutput('plot_vulcano', height = 800))
+                   )
+                 )
                )),
       tabPanel('Compare genes expression',
                sidebarLayout(
@@ -54,7 +64,7 @@ golem_add_external_resources <- function(){
   add_resource_path(
     'www', app_sys('app/www')
   )
- 
+  
   tags$head(
     favicon(),
     bundle_resources(

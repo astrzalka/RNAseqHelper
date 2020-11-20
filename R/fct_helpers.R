@@ -569,3 +569,38 @@ draw_heatmap_cluster <- function(fit, gene_start, gene_end, strains, genes_posit
     scale_x_discrete(position = 'top')
   
 }
+
+
+plot_volcano <- function(fit, contrast_comp, design, genes,
+                         fold_change = 1.5, top_tag_plot = 20){
+  
+  fit$genes <- dplyr::left_join(fit$genes, genes[,c(1,5,6,2)], by = c('genes' = 'gene'))
+  
+  contr <- limma::makeContrasts(contrasts = contrast_comp, levels = design)
+  
+  res <- edgeR::glmTreat(fit, contrast = contr, lfc = log2(fold_change))
+  
+  is.de <- edgeR::decideTestsDGE(res)
+  x <- summary(is.de)
+  
+  geny_de_volcano <- edgeR::topTags(res, n = sum(x))
+  res_plot <- geny_de_volcano$table
+  
+  top_genes <- res_plot$name[1:top_tag_plot]
+  plot <- EnhancedVolcano::EnhancedVolcano(res_plot,
+                                           lab = res_plot$name,
+                                           selectLab = top_genes,
+                                           x = 'logFC',
+                                           y = 'FDR',
+                                           #xlim = c(-4, 6),
+                                           #ylim = c(0, 10),
+                                           pCutoff = 0.05,
+                                           FCcutoff = fold_change, 
+                                           title = contrast_comp,
+                                           subtitle = '',
+                                           drawConnectors = TRUE,
+                                           labSize = 5
+  )
+  
+  return(plot)
+}
