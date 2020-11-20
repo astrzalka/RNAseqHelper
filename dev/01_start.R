@@ -15,11 +15,11 @@
 ## Add meta data about your application
 golem::fill_desc(
   pkg_name = "RNAseqHelper", # The Name of the package containing the App 
-  pkg_title = "PKG_TITLE", # The Title of the package containing the App 
-  pkg_description = "PKG_DESC.", # The Description of the package containing the App 
-  author_first_name = "AUTHOR_FIRST", # Your First Name
-  author_last_name = "AUTHOR_LAST", # Your Last Name
-  author_email = "AUTHOR@MAIL.COM", # Your Email
+  pkg_title = "RNA-seq Helper", # The Title of the package containing the App 
+  pkg_description = "Helper functions and shiny application for RNA-seq analysis.", # The Description of the package containing the App 
+  author_first_name = "Agnieszka", # Your First Name
+  author_last_name = "Strzałka", # Your Last Name
+  author_email = "the.larch19@gmail.com", # Your Email
   repo_url = NULL # The URL of the GitHub Repo (optional) 
 )     
 
