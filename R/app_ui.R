@@ -9,8 +9,34 @@ app_ui <- function(request) {
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # List the first level UI elements here 
-    fluidPage(
-      h1("RNAseqHelper")
+    navbarPage(
+      "RNAseqHelper",
+      theme = shinythemes::shinytheme("united"),
+      tabPanel('Filter data',
+               sidebarLayout(
+                 sidebarPanel(
+                   fileInput("dane_rna", 'Load RNA-seq data file in .rds format',
+                             accept=c('.rds')),
+                   'Filter comparisons',
+                   radioButtons('plot_type_comp', 'Choose plot type',
+                                choices = c('Volcano plot' = 'volcano',
+                                            'Heatmap' = 'heatmap'))
+                 ),
+                 mainPanel('Table',
+                           'Volcano plot')
+               )),
+      tabPanel('Compare genes expression',
+               sidebarLayout(
+                 sidebarPanel(
+                   radioButtons('plot_type', 'Choose plot type', 
+                                choices = c('Compare genes RPKM value' = 'only_genes',
+                                            'RPKM values of a gene cluster' = 'genes_cluster',
+                                            'Heatmap' = 'heatmap')),
+                   textInput('gene_start', 'Type in first gene name'),
+                   textInput('gene_end', 'Type in last gene name')
+                 ),
+                 mainPanel()
+               ))
     )
   )
 }
