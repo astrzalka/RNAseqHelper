@@ -49,15 +49,24 @@ app_ui <- function(request) {
                )),
       tabPanel('Compare genes expression',
                sidebarLayout(
-                 sidebarPanel(
+                 sidebarPanel(width = 2,
                    radioButtons('plot_type', 'Choose plot type', 
                                 choices = c('Compare genes RPKM value' = 'only_genes',
                                             'RPKM values of a gene cluster' = 'genes_cluster',
                                             'Heatmap' = 'heatmap')),
-                   textInput('gene_start', 'Type in first gene name'),
-                   textInput('gene_end', 'Type in last gene name')
+                   textInput('gene_start', 'Type in first gene name', value = 'SCO0596'),
+                   textInput('gene_end', 'Type in last gene name', value = 'SCO0602'),
+                   uiOutput('choose_strains')
                  ),
-                 mainPanel()
+                 mainPanel(width = 10,
+                   conditionalPanel('input.plot_type == "genes_cluster"',
+                                    plotOutput('plot_rpkm_cluster', height = 800)
+                   ),
+                   conditionalPanel('input.plot_type == "heatmap"',              
+                   plotOutput('heatmap_cluster', height = 800, width = 400)
+                   )
+                   
+                 )
                ))
     )
   )

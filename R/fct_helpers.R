@@ -473,61 +473,70 @@ plot_rpkm_genes <- function(fitted, genes_positions, strains,
                             gene_start, gene_end, flank = 0, chromosome = "NC_003888.3",
                             plot_type = 'gene_separate', log = FALSE){
   
-  g_start <- genes_positions %>% filter(name == gene_start)
-  g_end <- genes_positions %>% filter(name == gene_end)
+  g_start <- genes_positions %>% dplyr::filter(name == gene_start)
+  g_end <- genes_positions %>% dplyr::filter(name == gene_end)
   
   start_g <- g_start$start
   end_g <- g_end$end
   
-  genes_all <- genes_positions %>% filter(start <= end_g + flank & start >= start_g - flank |
-                                            end <= end_g + flank & end >= start_g - flank) %>%
-    mutate(strand = ifelse(strand == '+', 1, -1))
+  genes_all <- genes_positions %>% dplyr::filter(start <= end_g + flank & start >= start_g - flank |
+                                                   end <= end_g + flank & end >= start_g - flank) %>%
+    dplyr::mutate(strand = ifelse(strand == '+', 1, -1))
   
-  fitted_genes <- fitted %>% filter(gene %in% genes_all$name, strain %in% strains) %>% 
-    left_join(genes_all, by = c('gene' = 'name')) %>%
-    mutate(name = factor(gene.y, levels = unique(gene.y)))
+  fitted_genes <- fitted %>% dplyr::filter(gene %in% genes_all$name, strain %in% strains) %>% 
+    dplyr::left_join(genes_all, by = c('gene' = 'name')) %>%
+    dplyr::mutate(name = factor(gene.y, levels = unique(gene.y)))
   
   
   if(plot_type == 'gene_separate'){
-    p <- ggplot(fitted_genes, aes(y = strain, x = count, yend = strain, xend = 0))
+    p <- ggplot2::ggplot(fitted_genes, ggplot2::aes(y = strain, x = count, yend = strain, xend = 0))
     p <- p + 
-      theme_bw()+
-      geom_point(position = position_dodge(width = 0.5))+
-      geom_segment(position = position_dodge(width = 0.5))+
-      facet_wrap(~name, ncol = 1)+
-      xlab('RPKM')
+      ggplot2::theme_bw()+
+      ggplot2::geom_point(position = ggplot2::position_dodge(width = 0.5))+
+      ggplot2::geom_segment(position = ggplot2::position_dodge(width = 0.5))+
+      ggplot2::facet_wrap(~name, ncol = 1)+
+      ggplot2::xlab('RPKM')
     if(log){
-      p <- p + scale_x_log10()
+      p <- p + ggplot2::scale_x_log10()
     }
     
   }
   
   if(plot_type == 'gene_position'){
-    p <- ggplot(fitted_genes, aes(x = (start+end)/2, y = count, xmax = (start+end)/2, ymin = 0,
-                                  ymax = count, xmin = (start+end)/2,
-                                  color = strain, fill = strain))
+    p <- ggplot2::ggplot(fitted_genes, ggplot2::aes(x = (start+end)/2, 
+                                                    y = count, 
+                                                    xmax = (start+end)/2, 
+                                                    ymin = 0,
+                                                    ymax = count, 
+                                                    xmin = (start+end)/2,
+                                                    color = strain, 
+                                                    fill = strain))
     p <- p+ 
-      theme_bw()+
-      geom_point(position = position_dodge(width = 350))+
-      geom_linerange(position = position_dodge(width = 350))+
-      xlab('Genome posiiton [bp]')+
-      ylab('RPKM')+xlim(genes_all$start[1], genes_all$end[nrow(genes_all)])+
-      scale_color_brewer(palette = 'Set1')
+      ggplot2::theme_bw()+
+      ggplot2::geom_point(position = ggplot2::position_dodge(width = 350))+
+      ggplot2::geom_linerange(position = ggplot2::position_dodge(width = 350))+
+      ggplot2::xlab('Genome posiiton [bp]')+
+      ggplot2::ylab('RPKM')+
+      ggplot2::xlim(genes_all$start[1], genes_all$end[nrow(genes_all)])+
+      ggplot2::scale_color_brewer(palette = 'Set1')+
+      ggplot2::theme(text = ggplot2::element_text(size = 15),
+                     legend.position = 'top')
     
     if(log){
-      p <- p + scale_y_log10()
+      p <- p + ggplot2::scale_y_log10()
     }
     
-    p_genes <- ggplot(genes_all, aes(xmin = start, xmax = end, fill = factor(strand), 
+    p_genes <- ggplot2::ggplot(genes_all, ggplot2::aes(xmin = start, xmax = end, fill = factor(strand), 
                                      forward = strand, label = gene, y = '')) +
-      geom_gene_arrow()+
-      geom_gene_label()+theme_genes()+
-      theme(legend.position = 'none')+
-      ylab('')
+      gggenes::geom_gene_arrow()+
+      gggenes::geom_gene_label(grow = TRUE)+
+      gggenes::theme_genes()+
+      ggplot2::theme(legend.position = 'none', text = ggplot2::element_text(size = 15))+
+      ggplot2::ylab('')
     
     #print(p)
     
-    p <- p + p_genes + plot_layout(ncol = 1, heights = c(15, 1))
+    p <- p + p_genes + patchwork::plot_layout(ncol = 1, heights = c(13, 1))
     
   }
   
@@ -539,7 +548,7 @@ draw_heatmap_cluster <- function(fit, gene_start, gene_end, strains, genes_posit
   
   fit_counts <- fit$fitted.values
   
-  logCPM <- cpm(fit_counts, prior.count = 2, log = TRUE)
+  logCPM <- edgeR::cpm(fit_counts, prior.count = 2, log = TRUE)
   rownames(logCPM) <- fit$genes$genes
   
   logCPM <- t(scale(t(logCPM)))
@@ -548,30 +557,31 @@ draw_heatmap_cluster <- function(fit, gene_start, gene_end, strains, genes_posit
   
   logCPM_table$gene <- rownames(logCPM_table)
   
-  logCPM_table %>% gather(strain, cpm, -gene) %>%  
-    mutate(replicate = sub('.*_', '', strain),
+  logCPM_table %>% tidyr::gather(strain, cpm, -gene) %>%  
+    dplyr::mutate(replicate = sub('.*_', '', strain),
            strain = sub('_[123]', '', strain)) -> logCPM_table
   
-  g_start <- genes_positions %>% filter(name == gene_start)
-  g_end <- genes_positions %>% filter(name == gene_end)
+  g_start <- genes_positions %>% dplyr::filter(name == gene_start)
+  g_end <- genes_positions %>% dplyr::filter(name == gene_end)
   
   start_g <- g_start$start
   end_g <- g_end$end
   
-  genes_all <- genes_positions %>% filter(start <= end_g & start >= start_g |
+  genes_all <- genes_positions %>% dplyr::filter(start <= end_g & start >= start_g |
                                             end <= end_g & end >= start_g) 
   
-  cpm_genes <- logCPM_table %>% filter(gene %in% genes_all$name, strain %in% strains) %>% 
-    group_by(strain, gene) %>% summarise(cpm = mean(cpm)) 
+  cpm_genes <- logCPM_table %>% dplyr::filter(gene %in% genes_all$name, strain %in% strains) %>% 
+    dplyr::group_by(strain, gene) %>% dplyr::summarise(cpm = mean(cpm)) 
   
-  p <- ggplot(cpm_genes, aes(y = gene, strain, fill = cpm))
+  p <- ggplot2::ggplot(cpm_genes, ggplot2::aes(y = gene, strain, fill = cpm))
   
-  p + geom_tile()+
-    theme_minimal()+
-    theme(axis.title = element_blank(),
-          axis.text.x.top = element_text(angle = 90))+
-    scale_fill_distiller(type = 'div', palette = 5)+
-    scale_x_discrete(position = 'top')
+  p + ggplot2::geom_tile()+
+    ggplot2::theme_minimal()+
+    ggplot2::theme(axis.title = ggplot2::element_blank(),
+          axis.text.x.top = ggplot2::element_text(angle = 90))+
+    ggplot2::scale_fill_distiller(type = 'div', palette = 5)+
+    ggplot2::scale_x_discrete(position = 'top')+
+    ggplot2::theme(text = ggplot2::element_text(size = 15))
   
 }
 

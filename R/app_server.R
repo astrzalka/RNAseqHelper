@@ -92,4 +92,61 @@ app_server <- function( input, output, session ) {
     
   })
   
+  
+  output$choose_strains <- renderUI({
+    if (is.null(input$dane_rna))
+      return(NULL)
+    
+    dane <- rna_data()
+    
+    grupy <- dane$strain
+    
+    # selectInput("strains", 
+    #             "Choose strains for the plot",
+    #             choices = grupy, 
+    #             selected = grupy[1:4], 
+    #             multiple = TRUE)
+    
+    checkboxGroupInput("strains", 
+                       "Choose strains for the plot",
+                       choices = grupy, 
+                       selected = grupy[1:4])
+    
+  })
+  
+  
+  plot_rpkm_cluster <- reactive({
+    
+    data <- rna_data()
+    
+    p <- plot_rpkm_genes(fitted = data$data_rpkm, 
+                    genes_positions = data$genes_pos, 
+                    strains = input$strains,
+                    gene_start = input$gene_start, 
+                    gene_end = input$gene_end,
+                    plot_type = 'gene_position',
+                    flank = 0,
+                    log = FALSE)
+    
+    return(p)
+  })
+  
+  output$plot_rpkm_cluster <- renderPlot(plot_rpkm_cluster())
+  
+  plot_heatmap_cluster <- reactive({
+    
+    data <- rna_data()
+    
+    p <- draw_heatmap_cluster(fit = data$fit,
+                              gene_start = input$gene_start,
+                              gene_end = input$gene_end,
+                              strains = input$strains,
+                              genes_positions = data$genes_pos)
+    
+    return(p)
+    
+  })
+  
+  output$heatmap_cluster <- renderPlot(plot_heatmap_cluster())
+  
 }
