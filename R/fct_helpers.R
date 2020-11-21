@@ -3,52 +3,52 @@
 # can produce an MD and Volcano plot of data
 
 
-make_comparison <- function(fit, contrast, design, genes, plot_md = TRUE, plot_volcano = TRUE,
+make_comparison <- function(fit, contrast_comp, design, genes, plot_md = TRUE, plot_volcano = TRUE,
                             complete_list = FALSE, fold_change = 1.5, toptags_print = 5){
   
-  fit$genes <- left_join(fit$genes, genes[,c(1,5,6,2)], by = c('genes' = 'gene'))
+  fit$genes <- dplyr::left_join(fit$genes, genes[,c(1,5,6,2)], by = c('genes' = 'gene'))
   
-  contr <- makeContrasts(contrast, levels = design)
+  contr <- limma::makeContrasts(contrasts = contrast_comp, levels = design)
   
-  res <- glmTreat(fit, contrast = contr, lfc = log2(fold_change))
-  print("Top 5 differentially expressed genes")
-  print(topTags(res, n = toptags_print))
+  res <- edgeR::glmTreat(fit, contrast = contr, lfc = log2(fold_change))
+  #print("Top 5 differentially expressed genes")
+  #print(topTags(res, n = toptags_print))
   
-  is.de <- decideTestsDGE(res)
+  is.de <- edgeR::decideTestsDGE(res)
   
   x <- summary(is.de)
   print("Summarized differential expresion")
   print(summary(is.de))
   
   if(complete_list == TRUE){
-    geny_de <- topTags(res, n = sum(x))
+    geny_de <- edgeR::topTags(res, n = sum(x))
   }else{
-    geny_de <- topTags(res, n = x[1] + x[3])
+    geny_de <- edgeR::topTags(res, n = x[1] + x[3])
   }
   geny_de$table$contrast <- contrast
   
   if(plot_md == TRUE){
-    plotMD(res, status = is.de, values = c(1,-1), col = c('red', 'blue'), legend = 'topright')
+    limma::plotMD(res, status = is.de, values = c(1,-1), col = c('red', 'blue'), legend = 'topright')
   }
   
   if(plot_volcano == TRUE){
     
-    geny_de_volcano <- topTags(res, n = sum(x))
+    geny_de_volcano <- edgeR::topTags(res, n = sum(x))
     res_plot <- geny_de_volcano$table
     
     top_genes <- res_plot$name[1:20]
-    plot <- EnhancedVolcano(res_plot,
-                            lab = res_plot$name,
-                            selectLab = top_genes,
-                            x = 'logFC',
-                            y = 'FDR',
-                            #xlim = c(-4, 6),
-                            ylim = c(0, 10),
-                            pCutoff = 0.05,
-                            FCcutoff = 1.5, 
-                            title = contrast,
-                            subtitle = '',
-                            drawConnectors = TRUE
+    plot <- EnhancedVolcano::EnhancedVolcano(res_plot,
+                                             lab = res_plot$name,
+                                             selectLab = top_genes,
+                                             x = 'logFC',
+                                             y = 'FDR',
+                                             #xlim = c(-4, 6),
+                                             ylim = c(0, 10),
+                                             pCutoff = 0.05,
+                                             FCcutoff = 1.5, 
+                                             title = contrast,
+                                             subtitle = '',
+                                             drawConnectors = TRUE
     )
     print(plot)
   }
@@ -96,24 +96,29 @@ get_transcripts_from_gb <- function(genbank, add_names = TRUE, uniprot_file){
 # Plots heatmap for n genes most sifferentially expressed in comparison specified by contrast, 
 # specific strains can be chosen in groups
 
-draw_heatmap <- function(data_edger, contrast, comparison, groups, n = 50){
+draw_heatmap <- function(data_edger, comparison, groups, n = 50){
   
   keep <- which(data_edger$samples$group %in% groups)
   
   keep_data <- data_edger[,keep]
   
-  logCPM <- cpm(keep_data, prior.count = 2, log = TRUE)
+  logCPM <- edgeR::cpm(keep_data, prior.count = 2, log = TRUE)
   rownames(logCPM) <- keep_data$genes$genes
   colnames(logCPM) <- paste(keep_data$samples$group, 1:3, sep = '-')
   
-  o <- order(comparison[[1]]$table$PValue)
+  #o <- order(comparison[[1]]$table$PValue)
+  
+  o <- order(comparison$table$PValue)
+  
   logCPM <- logCPM[o[1:n],]
   
   logCPM <- t(scale(t(logCPM)))
   
-  col.pan <- colorpanel(100, 'blue', 'white', 'red')
+  col.pan <- gplots::colorpanel(100, 'blue', 'white', 'red')
   
-  heatmap(logCPM, col = col.pan, margins = c(9,5), cexCol = 0.75, scale = 'none')
+  p <- heatmap(logCPM, col = col.pan, margins = c(9,5), cexCol = 0.75, scale = 'none')
+  
+  return(p)
   
 }
 
@@ -602,5 +607,5 @@ plot_volcano <- function(fit, contrast_comp, design, genes,
                                            labSize = 5
   )
   
-  return(plot)
+  return(list(plot, res))
 }

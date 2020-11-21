@@ -21,9 +21,15 @@ app_ui <- function(request) {
                    radioButtons('plot_type_comp', 'Choose plot type',
                                 choices = c('Volcano plot' = 'vulcano',
                                             'Heatmap' = 'heatmap')),
-                   conditionalPanel('input.plot_type_comp == "vulcano"',
-                   uiOutput('choose_contrast')
+                   #conditionalPanel('input.plot_type_comp == "vulcano"',
+                   uiOutput('choose_contrast'),
+                   numericInput('logFC', 'Choose logFC for the comparison', 
+                                value = 1.5, min = 1, step = 0.5),
+                   conditionalPanel('input.plot_type_comp == "heatmap"',
+                                    numericInput('heatmap_contrast_n', 'Choose number of genes for the heatmap',
+                                                 value = 100, min = 1, step = 10)
                    )
+                   #)
                  ),
                  mainPanel(
                    tabsetPanel(
@@ -31,7 +37,13 @@ app_ui <- function(request) {
                               dataTableOutput('data_all_table')
                      ),
                      tabPanel('Plots',
-                              plotOutput('plot_vulcano', height = 800))
+                              conditionalPanel('input.plot_type_comp == "vulcano"',
+                                               plotOutput('plot_vulcano', height = 800)
+                              ),
+                              conditionalPanel('input.plot_type_comp == "heatmap"',
+                                               plotOutput('heatmap_contrast', height = 800)
+                              )
+                     )
                    )
                  )
                )),

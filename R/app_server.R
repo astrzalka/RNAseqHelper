@@ -41,24 +41,53 @@ app_server <- function( input, output, session ) {
                       contrast_comp =  input$contrast,
                       design = data$design,
                       genes = data$genes,
-                      fold_change = 1.5,
+                      fold_change = input$logFC,
                       top_tag_plot = 10)
     
     return(p)
     
   })
   
-  output$plot_vulcano <- renderPlot(volcano_plot())
+  output$plot_vulcano <- renderPlot(volcano_plot()[[1]])
+  
+  plot_heatmap_contrast <- reactive({
+    
+    data <- rna_data()
+    
+    # wynik <- make_comparison(fit = data$fit, 
+    #                          contrast_comp = input$contrast, 
+    #                          design = data$design,
+    #                          genes = data$genes, 
+    #                          complete_list = FALSE, 
+    #                          toptags_print = 10, 
+    #                          plot_volcano = FALSE, 
+    #                          plot_md = FALSE,
+    #                          fold_change = 1.5)
+    
+    wynik <- volcano_plot()
+    
+    group <- data$strain
+    
+    p <- draw_heatmap(data_edger = data$data_edger,
+                      comparison = wynik[[2]],
+                      groups = group,
+                      n = input$heatmap_contrast_n)
+    
+    return(p)
+    
+  })
+  
+  output$heatmap_contrast <- renderPlot(plot_heatmap_contrast())
   
   output$choose_contrast <- renderUI({
     if (is.null(input$dane_rna))
       return(NULL)
-
+    
     dane <- rna_data()
     
     grupy <- dane$contrasts
     
-    selectInput("contrast", "Choose contrast for vulcano plot",
+    selectInput("contrast", "Choose contrast for the plot",
                 choices = grupy, selected = grupy[1])
     
   })
