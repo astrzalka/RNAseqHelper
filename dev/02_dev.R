@@ -25,6 +25,7 @@ usethis::use_package( "EnhancedVolcano" )
 usethis::use_package( "shinythemes" )
 usethis::use_package( "limma" )
 usethis::use_package( "gplots" )
+usethis::use_package( "UpSetR" )
 
 
 ## Add modules ----

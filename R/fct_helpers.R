@@ -528,15 +528,16 @@ plot_rpkm_genes <- function(fitted, genes_positions, strains,
     
     p_genes <- ggplot2::ggplot(genes_all, ggplot2::aes(xmin = start, xmax = end, fill = factor(strand), 
                                      forward = strand, label = gene, y = '')) +
-      gggenes::geom_gene_arrow()+
-      gggenes::geom_gene_label(grow = TRUE)+
+      gggenes::geom_gene_arrow(arrowhead_height = grid::unit(9, 'mm'),
+                               arrow_body_height = grid::unit(7, 'mm'))+
+      gggenes::geom_gene_label(grow = TRUE, reflow = TRUE, height = grid::unit(2, 'cm'))+
       gggenes::theme_genes()+
       ggplot2::theme(legend.position = 'none', text = ggplot2::element_text(size = 15))+
       ggplot2::ylab('')
     
     #print(p)
     
-    p <- p + p_genes + patchwork::plot_layout(ncol = 1, heights = c(13, 1))
+    p <- p + p_genes + patchwork::plot_layout(ncol = 1, heights = c(10, 1))
     
   }
   

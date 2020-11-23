@@ -28,7 +28,11 @@ app_ui <- function(request) {
                    conditionalPanel('input.plot_type_comp == "heatmap"',
                                     numericInput('heatmap_contrast_n', 'Choose number of genes for the heatmap',
                                                  value = 100, min = 1, step = 10)
-                   )
+                   ),
+                   downloadButton('download_1', 'Download png plot'),
+                   numericInput('width_1', 'Plot width [cm]', 25, min = 5, max = 75),
+                   numericInput('height_1', 'Plot height [cm]', 20, min = 5, max = 75),
+                   numericInput('res_1', 'Resolution', 200, min = 100, max = 500)
                    #)
                  ),
                  mainPanel(
@@ -50,22 +54,50 @@ app_ui <- function(request) {
       tabPanel('Compare genes expression',
                sidebarLayout(
                  sidebarPanel(width = 2,
-                   radioButtons('plot_type', 'Choose plot type', 
-                                choices = c('Compare genes RPKM value' = 'only_genes',
-                                            'RPKM values of a gene cluster' = 'genes_cluster',
-                                            'Heatmap' = 'heatmap')),
-                   textInput('gene_start', 'Type in first gene name', value = 'SCO0596'),
-                   textInput('gene_end', 'Type in last gene name', value = 'SCO0602'),
-                   uiOutput('choose_strains')
+                              radioButtons('plot_type', 'Choose plot type', 
+                                           choices = c(
+                                             #'Compare genes RPKM value' = 'only_genes',
+                                             'RPKM values of a gene cluster' = 'genes_cluster',
+                                             'Heatmap' = 'heatmap')),
+                              textInput('gene_start', 'Type in first gene name', value = 'SCO0596'),
+                              textInput('gene_end', 'Type in last gene name', value = 'SCO0602'),
+                              checkboxInput('log_rpkm', 'Use log10 scale for RPKM?', value = FALSE),
+                              uiOutput('choose_strains'),
+                              downloadButton('download_2', 'Download png plot'),
+                              numericInput('width_2', 'Plot width [cm]', 35, min = 5, max = 50),
+                              numericInput('height_2', 'Plot height [cm]', 18, min = 5, max = 75),
+                              numericInput('res_2', 'Resolution', 200, min = 100, max = 500)
                  ),
                  mainPanel(width = 10,
-                   conditionalPanel('input.plot_type == "genes_cluster"',
-                                    plotOutput('plot_rpkm_cluster', height = 800)
-                   ),
-                   conditionalPanel('input.plot_type == "heatmap"',              
-                   plotOutput('heatmap_cluster', height = 800, width = 400)
+                           conditionalPanel('input.plot_type == "genes_cluster"',
+                                            plotOutput('plot_rpkm_cluster', height = 800)
+                           ),
+                           conditionalPanel('input.plot_type == "heatmap"',              
+                                            plotOutput('heatmap_cluster', height = 800, width = 400)
+                           )
+                           
+                 )
+               )),
+      tabPanel('UpSet Plots',
+               sidebarLayout(
+                 sidebarPanel(
+                   uiOutput('choose_strains_upset'),
+                   numericInput('logFC_upset', 'Choose logFC threshold value for the upset plot',
+                                value = 1.5, min = 0.5, step = 0.1),
+                   downloadButton('download_3', 'Download png plot'),
+                   numericInput('width_3', 'Plot width [cm]', 30, min = 5, max = 50),
+                   numericInput('height_3', 'Plot height [cm]', 18, min = 5, max = 75),
+                   numericInput('res_3', 'Resolution', 200, min = 100, max = 500)
+                 ),
+                 mainPanel(
+                   tabsetPanel(
+                     tabPanel('Table',
+                              dataTableOutput('table_upset')
+                     ),
+                     tabPanel('Upset Plot',
+                              plotOutput('upset_plot', height = 700)
+                     )
                    )
-                   
                  )
                ))
     )

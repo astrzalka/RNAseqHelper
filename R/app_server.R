@@ -33,7 +33,7 @@ app_server <- function( input, output, session ) {
   
   output$data_all_table <- renderDataTable(table_genes())
   
-  volcano_plot <- reactive({
+  vulcano_plot <- reactive({
     
     data <- rna_data()
     
@@ -48,7 +48,7 @@ app_server <- function( input, output, session ) {
     
   })
   
-  output$plot_vulcano <- renderPlot(volcano_plot()[[1]])
+  output$plot_vulcano <- renderPlot(vulcano_plot()[[1]])
   
   plot_heatmap_contrast <- reactive({
     
@@ -64,7 +64,7 @@ app_server <- function( input, output, session ) {
     #                          plot_md = FALSE,
     #                          fold_change = 1.5)
     
-    wynik <- volcano_plot()
+    wynik <- vulcano_plot()
     
     group <- data$strain
     
@@ -78,6 +78,61 @@ app_server <- function( input, output, session ) {
   })
   
   output$heatmap_contrast <- renderPlot(plot_heatmap_contrast())
+  
+  
+  filter_table_upset <- reactive({
+    
+    data <- rna_data()
+    
+    table <- data$data_all
+    
+    strains <- input$strains_upset
+    
+    stays  <- which(colnames(table) %in% c("genes", "name", "product", strains))
+    
+    table_zostaje <- table[,stays]
+    
+    table_signif <- table_zostaje %>% 
+      tidyr::gather('comparison', 'logFC', -genes, -name, -product) %>%
+      dplyr::group_by(genes) %>% 
+      dplyr::mutate(gene_NA = anyNA(logFC)) %>% 
+      dplyr::filter(!gene_NA) %>% 
+      tidyr::spread(key = 'comparison', value = 'logFC') %>%
+      dplyr::select(-gene_NA)
+    
+    table_upset <- table_zostaje %>% 
+      tidyr::gather('comparison', 'logFC', -genes, -name, -product) %>%
+      dplyr::mutate(logFC = ifelse(abs(logFC) < input$logFC_upset, 0, 1),
+                    logFC = ifelse(is.na(logFC), 0, logFC)) %>%
+      tidyr::spread(key = 'comparison', value = 'logFC') %>%
+      dplyr::select(-product, -name)
+      
+      
+    
+    return(list(table_signif, table_upset))
+    
+  })
+  
+  output$table_upset <- renderDataTable(filter_table_upset()[[1]])
+  
+  plot_upset <- reactive({
+    
+    table <- filter_table_upset()[[2]]
+    
+    
+    p <- UpSetR::upset(data = table,
+                       order.by = 'freq',
+                       nsets = 10,
+                       text.scale = 2)
+    
+    return(p)
+    
+  })
+  
+  output$upset_plot <- renderPlot(plot_upset())
+  
+  
+  ############################ create UI parts from the data ############################
   
   output$choose_contrast <- renderUI({
     if (is.null(input$dane_rna))
@@ -114,6 +169,28 @@ app_server <- function( input, output, session ) {
     
   })
   
+  output$choose_strains_upset <- renderUI({
+    if (is.null(input$dane_rna))
+      return(NULL)
+    
+    dane <- rna_data()
+    
+    grupy <- colnames(dane$data_all)
+    
+    grupy <- grupy[!(grupy %in% c("genes", "name", "product"))]
+    
+    # selectInput("strains", 
+    #             "Choose strains for the plot",
+    #             choices = grupy, 
+    #             selected = grupy[1:4], 
+    #             multiple = TRUE)
+    
+    checkboxGroupInput("strains_upset", 
+                       "Choose columns for the plot",
+                       choices = grupy, 
+                       selected = grupy[1:2])
+    
+  })
   
   plot_rpkm_cluster <- reactive({
     
@@ -126,7 +203,7 @@ app_server <- function( input, output, session ) {
                     gene_end = input$gene_end,
                     plot_type = 'gene_position',
                     flank = 0,
-                    log = FALSE)
+                    log = input$log_rpkm)
     
     return(p)
   })
@@ -148,5 +225,64 @@ app_server <- function( input, output, session ) {
   })
   
   output$heatmap_cluster <- renderPlot(plot_heatmap_cluster())
+  
+  ########################### Download plots #######################################
+  
+  prepare_plot_1 <- reactive({
+    
+    if(input$plot_type_comp == 'vulcano'){
+      return(vulcano_plot()[[1]])
+    }
+    
+    if(input$plot_type_comp == 'heatmap'){
+      return(plot_heatmap_contrast())
+    }
+    
+    
+  }) 
+  
+  output$download_1 <- downloadHandler(
+    filename = function() { paste(input$dataset, '.png', sep='') },
+    content = function(file) {
+      png(file, res = input$res_1, width = input$width_1, input$height_1, unit = 'cm')
+      print(prepare_plot_1())
+      dev.off()
+    })
+  
+  
+  prepare_plot_2 <- reactive({
+    
+    if(input$plot_type == 'genes_cluster'){
+      return(plot_rpkm_cluster())
+    }
+    
+    if(input$plot_type == 'heatmap'){
+      return(plot_heatmap_cluster())
+    }
+    
+    
+  }) 
+  
+  output$download_2 <- downloadHandler(
+    filename = function() { paste(input$dataset, '.png', sep='') },
+    content = function(file) {
+      png(file, res = input$res_2, width = input$width_2, input$height_2, unit = 'cm')
+      print(prepare_plot_2())
+      dev.off()
+    })
+  
+  prepare_plot_3 <- reactive({
+    
+  return(plot_upset())
+    
+  }) 
+  
+  output$download_3 <- downloadHandler(
+    filename = function() { paste(input$dataset, '.png', sep='') },
+    content = function(file) {
+      png(file, res = input$res_3, width = input$width_3, input$height_3, unit = 'cm')
+      print(prepare_plot_3())
+      dev.off()
+    })
   
 }
