@@ -62,6 +62,8 @@ app_ui <- function(request) {
                               textInput('gene_start', 'Type in first gene name', value = 'SCO0596'),
                               textInput('gene_end', 'Type in last gene name', value = 'SCO0602'),
                               checkboxInput('log_rpkm', 'Use log10 scale for RPKM?', value = FALSE),
+                              radioButtons('TPM', 'Which data format should be used?', 
+                                           choices = c('RPKM', 'TPM'), selected = 'RPKM', inline = TRUE),
                               uiOutput('choose_strains'),
                               downloadButton('download_2', 'Download png plot'),
                               numericInput('width_2', 'Plot width [cm]', 35, min = 5, max = 50),

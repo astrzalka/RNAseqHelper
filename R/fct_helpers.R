@@ -469,9 +469,9 @@ plot_fitted_genes <- function(fitted, genes_positions, strains,
   
 }
 
-plot_rpkm_genes <- function(fitted, genes_positions, strains,
+plot_rpkm_genes <- function(fitted, genes_positions, strains, fit,
                             gene_start, gene_end, flank = 0, chromosome = "NC_003888.3",
-                            plot_type = 'gene_separate', log = FALSE){
+                            plot_type = 'gene_separate', log = FALSE, format = 'RPKM'){
   
   g_start <- genes_positions %>% dplyr::filter(name == gene_start)
   g_end <- genes_positions %>% dplyr::filter(name == gene_end)
@@ -483,10 +483,34 @@ plot_rpkm_genes <- function(fitted, genes_positions, strains,
                                                    end <= end_g + flank & end >= start_g - flank) %>%
     dplyr::mutate(strand = ifelse(strand == '+', 1, -1))
   
-  fitted_genes <- fitted %>% dplyr::filter(gene %in% genes_all$name, strain %in% strains) %>% 
-    dplyr::left_join(genes_all, by = c('gene' = 'name')) %>%
-    dplyr::mutate(name = factor(gene.y, levels = unique(gene.y)))
-  
+  if(format == 'RPKM'){
+    
+    fitted_genes <- fitted %>% dplyr::filter(gene %in% genes_all$name, strain %in% strains) %>% 
+      dplyr::left_join(genes_all, by = c('gene' = 'name')) %>%
+      dplyr::mutate(name = factor(gene.y, levels = unique(gene.y)))
+    
+  } else if(format == 'TPM'){
+    
+    counts <- as.data.frame(fit$counts)
+    
+    counts$gene <- rownames(counts)
+    
+    counts %>% dplyr::left_join(genes_positions, by = c('gene' = 'name')) %>% 
+      dplyr::select(-gene.y) %>%
+      tidyr::gather(key = 'strain', value = 'count', -gene, -start, -end, -width, -strand) %>%
+      dplyr::group_by(strain)%>%
+      dplyr::mutate(RPK = count/(width/1000),
+                    scaling_factor = sum(RPK)/1000000,
+                    count = RPK / scaling_factor,
+                    strain = sub('_[123]', '', strain)) %>%
+      dplyr::group_by(strain, gene) %>%
+      dplyr::filter(gene %in% genes_all$name, strain %in% strains) %>%
+      dplyr::summarise(count = mean(count),
+                       start = mean(start),
+                       end = mean(end)) -> fitted_genes
+    
+    
+  }
   
   if(plot_type == 'gene_separate'){
     p <- ggplot2::ggplot(fitted_genes, ggplot2::aes(y = strain, x = count, yend = strain, xend = 0))
@@ -527,7 +551,7 @@ plot_rpkm_genes <- function(fitted, genes_positions, strains,
     }
     
     p_genes <- ggplot2::ggplot(genes_all, ggplot2::aes(xmin = start, xmax = end, fill = factor(strand), 
-                                     forward = strand, label = gene, y = '')) +
+                                                       forward = strand, label = gene, y = '')) +
       gggenes::geom_gene_arrow(arrowhead_height = grid::unit(9, 'mm'),
                                arrow_body_height = grid::unit(7, 'mm'))+
       gggenes::geom_gene_label(grow = TRUE, reflow = TRUE, height = grid::unit(2, 'cm'))+
@@ -560,7 +584,7 @@ draw_heatmap_cluster <- function(fit, gene_start, gene_end, strains, genes_posit
   
   logCPM_table %>% tidyr::gather(strain, cpm, -gene) %>%  
     dplyr::mutate(replicate = sub('.*_', '', strain),
-           strain = sub('_[123]', '', strain)) -> logCPM_table
+                  strain = sub('_[123]', '', strain)) -> logCPM_table
   
   g_start <- genes_positions %>% dplyr::filter(name == gene_start)
   g_end <- genes_positions %>% dplyr::filter(name == gene_end)
@@ -569,7 +593,7 @@ draw_heatmap_cluster <- function(fit, gene_start, gene_end, strains, genes_posit
   end_g <- g_end$end
   
   genes_all <- genes_positions %>% dplyr::filter(start <= end_g & start >= start_g |
-                                            end <= end_g & end >= start_g) 
+                                                   end <= end_g & end >= start_g) 
   
   cpm_genes <- logCPM_table %>% dplyr::filter(gene %in% genes_all$name, strain %in% strains) %>% 
     dplyr::group_by(strain, gene) %>% dplyr::summarise(cpm = mean(cpm)) 
@@ -579,7 +603,7 @@ draw_heatmap_cluster <- function(fit, gene_start, gene_end, strains, genes_posit
   p + ggplot2::geom_tile()+
     ggplot2::theme_minimal()+
     ggplot2::theme(axis.title = ggplot2::element_blank(),
-          axis.text.x.top = ggplot2::element_text(angle = 90))+
+                   axis.text.x.top = ggplot2::element_text(angle = 90))+
     ggplot2::scale_fill_distiller(type = 'div', palette = 5)+
     ggplot2::scale_x_discrete(position = 'top')+
     ggplot2::theme(text = ggplot2::element_text(size = 15))

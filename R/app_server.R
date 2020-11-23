@@ -203,7 +203,9 @@ app_server <- function( input, output, session ) {
                     gene_end = input$gene_end,
                     plot_type = 'gene_position',
                     flank = 0,
-                    log = input$log_rpkm)
+                    log = input$log_rpkm,
+                    format = input$TPM,
+                    fit = data$fit)
     
     return(p)
   })
