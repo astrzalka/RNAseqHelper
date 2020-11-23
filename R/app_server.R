@@ -11,7 +11,7 @@ options(shiny.maxRequestSize=300*1024^2)
 
 app_server <- function( input, output, session ) {
   # List the first level callModules here
-  
+  library(magrittr)
   rna_data <- reactive({
     
     inFile <- input$dane_rna
