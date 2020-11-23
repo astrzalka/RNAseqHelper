@@ -42,10 +42,10 @@ app_ui <- function(request) {
                      ),
                      tabPanel('Plots',
                               conditionalPanel('input.plot_type_comp == "vulcano"',
-                                               plotOutput('plot_vulcano', height = 800)
+                                               plotOutput('plot_vulcano', height = 700)
                               ),
                               conditionalPanel('input.plot_type_comp == "heatmap"',
-                                               plotOutput('heatmap_contrast', height = 800)
+                                               plotOutput('heatmap_contrast', height = 700)
                               )
                      )
                    )
@@ -70,10 +70,10 @@ app_ui <- function(request) {
                  ),
                  mainPanel(width = 10,
                            conditionalPanel('input.plot_type == "genes_cluster"',
-                                            plotOutput('plot_rpkm_cluster', height = 800)
+                                            plotOutput('plot_rpkm_cluster', height = 700)
                            ),
                            conditionalPanel('input.plot_type == "heatmap"',              
-                                            plotOutput('heatmap_cluster', height = 800, width = 400)
+                                            plotOutput('heatmap_cluster', height = 700, width = 400)
                            )
                            
                  )
