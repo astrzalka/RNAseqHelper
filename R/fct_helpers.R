@@ -3,6 +3,22 @@
 # can produce an MD and Volcano plot of data
 
 
+#' Compare expression in two strains specified by contrats using edgeR package glmTreat
+#'
+#' @param fit fit object made using edgeR package
+#' @param contrast_comp strains to compare, have to present in the design
+#' @param design design specifying which libraries belong to which strain
+#' @param genes data_frame containing genes data
+#' @param plot_md should md plot be shown? defaut TRUE
+#' @param plot_volcano should volcano plot be shown? default TRUE
+#' @param complete_list should it return complete list of genes or only those differentially expressed? default FALSE
+#' @param fold_change fold change used in glmTreat function
+#' @param toptags_print how many genes should be printed?
+#'
+#' @return result of topTags function for all or differentially expressed genes
+#' @export
+#'
+#' @examples
 make_comparison <- function(fit, contrast_comp, design, genes, plot_md = TRUE, plot_volcano = TRUE,
                             complete_list = FALSE, fold_change = 1.5, toptags_print = 5){
   
@@ -62,7 +78,16 @@ make_comparison <- function(fit, contrast_comp, design, genes, plot_md = TRUE, p
 }
 
 
-# will produce a data.frame with gene names, protein id and function and a note from genbank file
+#' will produce a data.frame with gene names, protein id and function and a note from genbank file
+#'
+#' @param genbank genbank file read in using genbankr package
+#' @param add_names add names from uniprot file? default TRUE
+#' @param uniprot_file uniprot file containing protein name etc.
+#'
+#' @return data frame containing gene id, locus_tag, product, protein_id and note from genbank file
+#' @export
+#'
+#' @examples
 get_transcripts_from_gb <- function(genbank, add_names = TRUE, uniprot_file){
   
   trans <- transcripts(genbank)
@@ -93,9 +118,20 @@ get_transcripts_from_gb <- function(genbank, add_names = TRUE, uniprot_file){
   return(res)
 }
 
-# Plots heatmap for n genes most sifferentially expressed in comparison specified by contrast, 
-# specific strains can be chosen in groups
+# 
 
+#' Plots heatmap for n genes most differentially expressed in comparison specified by contrast, 
+#' specific strains can be chosen in groups
+#'
+#' @param data_edger experiment data from edgeR analysis
+#' @param comparison list containing table with pvalues for gene ordering
+#' @param groups specific strains to show on heatmap
+#' @param n number of genes shown on heatmap
+#'
+#' @return heatmap 
+#' @export
+#'
+#' @examples
 draw_heatmap <- function(data_edger, comparison, groups, n = 50){
   
   keep <- which(data_edger$samples$group %in% groups)
@@ -176,6 +212,15 @@ compare_strains <- function(list_res, grupy){
 }
 
 
+#' Reads cluster file prepared using clust program
+#'
+#' @param file clust result file
+#' @param genes_list list of genes 
+#'
+#' @return data frame with all genes with assigned cluster or NA
+#' @export
+#'
+#' @examples
 read_cluster_file <- function(file, genes_list){
   
   data <- read_delim(file, 
@@ -373,7 +418,16 @@ make_table_rnaseq <- function(gene_i, data_all, genes_information) {
 
 
 
-# function reads from antismash files query genes with best subject matching genes
+
+#' function reads from antismash files query genes with best subject matching genes
+#'
+#' @param file antismash result file in txt
+#'
+#' @return data frame with antismash results with gene information and blast data 
+#' (% identity, blast score evalue) for each found similar gene 
+#' @export
+#'
+#' @examples
 read_antismash <- function(file){
   
   # read in raw file
@@ -605,6 +659,7 @@ draw_heatmap_cluster <- function(fit, gene_start, gene_end, strains, genes_posit
     ggplot2::theme(axis.title = ggplot2::element_blank(),
                    axis.text.x.top = ggplot2::element_text(angle = 90))+
     ggplot2::scale_fill_distiller(type = 'div', palette = 5)+
+    #scico::scale_fill_scico(palette = 'vikO')+ # tried scico palette, but I like the colorbrewer more
     ggplot2::scale_x_discrete(position = 'top')+
     ggplot2::theme(text = ggplot2::element_text(size = 15))
   
