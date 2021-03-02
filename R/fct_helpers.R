@@ -681,6 +681,8 @@ plot_volcano <- function(fit, contrast_comp, design, genes,
   geny_de_volcano <- edgeR::topTags(res, n = sum(x))
   res_plot <- geny_de_volcano$table
   
+  maks <- max(-log10(res_plot$FDR)) + 0.5
+
   top_genes <- res_plot$name[1:top_tag_plot]
   plot <- EnhancedVolcano::EnhancedVolcano(res_plot,
                                            lab = res_plot$name,
@@ -688,7 +690,7 @@ plot_volcano <- function(fit, contrast_comp, design, genes,
                                            x = 'logFC',
                                            y = 'FDR',
                                            #xlim = c(-4, 6),
-                                           #ylim = c(0, 10),
+                                           ylim = c(0, maks),
                                            pCutoff = 0.05,
                                            FCcutoff = fold_change, 
                                            title = contrast_comp,
