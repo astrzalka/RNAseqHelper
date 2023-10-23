@@ -742,7 +742,7 @@ plot_logfc_genes <- function(logFC, genes_positions, contrasts,
     ggplot2::geom_point(position = ggplot2::position_dodge(width = 350), size = 3)+
     ggplot2::geom_linerange(position = ggplot2::position_dodge(width = 350))+
     ggplot2::xlab('Genome posiiton [bp]')+
-    ggplot2::ylab('RPKM')+
+    ggplot2::ylab('LogFC')+
     ggplot2::xlim(genes_all$start[1], genes_all$end[nrow(genes_all)])+
     #ggplot2::scale_color_brewer(palette = 'Set1')+
     ggplot2::theme(text = ggplot2::element_text(size = 15),
