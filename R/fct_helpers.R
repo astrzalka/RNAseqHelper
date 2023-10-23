@@ -608,9 +608,9 @@ plot_rpkm_genes <- function(fitted, genes_positions, strains, fit,
                                                        forward = strand, label = gene, y = '')) +
       gggenes::geom_gene_arrow(arrowhead_height = grid::unit(9, 'mm'),
                                arrow_body_height = grid::unit(7, 'mm'))+
-      gggenes::geom_gene_label(grow = TRUE, reflow = TRUE, height = grid::unit(2, 'cm'))+
+      gggenes::geom_gene_label(grow = FALSE, reflow = TRUE, height = grid::unit(2, 'cm'))+
       gggenes::theme_genes()+
-      ggplot2::theme(legend.position = 'none', text = ggplot2::element_text(size = 15))+
+      ggplot2::theme(legend.position = 'none', text = ggplot2::element_text(size = 12))+
       ggplot2::ylab('')
     
     #print(p)
@@ -753,9 +753,9 @@ plot_logfc_genes <- function(logFC, genes_positions, contrasts,
                                                      forward = strand, label = gene, y = '')) +
     gggenes::geom_gene_arrow(arrowhead_height = grid::unit(9, 'mm'),
                              arrow_body_height = grid::unit(7, 'mm'))+
-    gggenes::geom_gene_label(grow = TRUE, reflow = TRUE, height = grid::unit(2, 'cm'))+
+    gggenes::geom_gene_label(grow = FALSE, reflow = TRUE, height = grid::unit(2, 'cm'))+
     gggenes::theme_genes()+
-    ggplot2::theme(legend.position = 'none', text = ggplot2::element_text(size = 15))+
+    ggplot2::theme(legend.position = 'none', text = ggplot2::element_text(size = 12))+
     ggplot2::ylab('')
   
   #print(p)
