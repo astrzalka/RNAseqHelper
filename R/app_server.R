@@ -106,8 +106,8 @@ app_server <- function( input, output, session ) {
                     logFC = ifelse(is.na(logFC), 0, logFC)) %>%
       tidyr::spread(key = 'comparison', value = 'logFC') %>%
       dplyr::select(-product, -name)
-      
-      
+    
+    
     
     return(list(table_signif, table_upset))
     
@@ -166,6 +166,19 @@ app_server <- function( input, output, session ) {
                        "Choose strains for the plot",
                        choices = grupy, 
                        selected = grupy[1:4])
+  })
+  
+  output$choose_contrasts_logfc <- renderUI({
+    if (is.null(input$dane_rna))
+      return(NULL)
+    
+    dane <- rna_data()
+    
+    grupy <- dane$contrasts
+    
+    checkboxGroupInput("contrasts", 
+                       "Choose contrasts for the plot",
+                       choices = grupy, selected = grupy[1:2])
     
   })
   
@@ -197,15 +210,15 @@ app_server <- function( input, output, session ) {
     data <- rna_data()
     
     p <- plot_rpkm_genes(fitted = data$data_rpkm, 
-                    genes_positions = data$genes_pos, 
-                    strains = input$strains,
-                    gene_start = input$gene_start, 
-                    gene_end = input$gene_end,
-                    plot_type = 'gene_position',
-                    flank = 0,
-                    log = input$log_rpkm,
-                    format = input$TPM,
-                    fit = data$fit)
+                         genes_positions = data$genes_pos, 
+                         strains = input$strains,
+                         gene_start = input$gene_start, 
+                         gene_end = input$gene_end,
+                         plot_type = 'gene_position',
+                         flank = 0,
+                         log = input$log_rpkm,
+                         format = input$TPM,
+                         fit = data$fit)
     
     return(p)
   })
@@ -227,6 +240,22 @@ app_server <- function( input, output, session ) {
   })
   
   output$heatmap_cluster <- renderPlot(plot_heatmap_cluster())
+  
+  plot_logFC <- reactive({
+    
+    data <- rna_data()
+    
+    p <- plot_logfc_genes(logFC = data$data_all_notsig, 
+                          genes_positions = data$genes_pos, 
+                          contrasts = input$contrasts,
+                          gene_start = input$gene_start, 
+                          gene_end = input$gene_end,
+                          flank = 0)
+    
+    return(p)
+  })
+  
+  output$plot_logFC <- renderPlot(plot_logFC())
   
   ########################### Download plots #######################################
   
@@ -275,7 +304,7 @@ app_server <- function( input, output, session ) {
   
   prepare_plot_3 <- reactive({
     
-  return(plot_upset())
+    return(plot_upset())
     
   }) 
   

@@ -682,7 +682,7 @@ plot_volcano <- function(fit, contrast_comp, design, genes,
   res_plot <- geny_de_volcano$table
   
   maks <- max(-log10(res_plot$FDR)) + 0.5
-
+  
   top_genes <- res_plot$name[1:top_tag_plot]
   plot <- EnhancedVolcano::EnhancedVolcano(res_plot,
                                            lab = res_plot$name,
@@ -700,4 +700,67 @@ plot_volcano <- function(fit, contrast_comp, design, genes,
   )
   
   return(list(plot, res))
+}
+
+
+plot_logfc_genes <- function(logFC, genes_positions, contrasts,
+                             gene_start, gene_end, flank = 0, chromosome = "NC_003888.3",
+                             plot_type = 'gene_separate'){
+  
+  g_start <- genes_positions %>% dplyr::filter(name == gene_start)
+  g_end <- genes_positions %>% dplyr::filter(name == gene_end)
+  
+  start_g <- g_start$start
+  end_g <- g_end$end
+  
+  genes_all <- genes_positions %>% dplyr::filter(start <= end_g + flank & start >= start_g - flank |
+                                                   end <= end_g + flank & end >= start_g - flank) %>%
+    dplyr::mutate(strand = ifelse(strand == '+', 1, -1))
+  
+  #logFC <- data_adpA$data_all_notsig
+  
+  names(logFC)[[3]] <- 'locus_tag'
+  
+  logFC %>% dplyr::filter(locus_tag %in% genes_all$name, contrast %in% contrasts) -> logFC
+
+    # logFC %>% tidyr::pivot_longer(cols = 4:ncol(logFC), names_to = 'contrast', values_to = 'logFC') -> logFC
+  
+  logFC %>% dplyr::left_join(genes_all, by = c('locus_tag' = 'name')) %>%
+    dplyr::mutate(name = factor(gene.y, levels = unique(gene.y)),
+                  significant = ifelse(FDR <= 0.05, TRUE, FALSE)) -> logFC
+  
+  p <- ggplot2::ggplot(logFC, ggplot2::aes(x = (start+end)/2, 
+                                           y = logFC, 
+                                           xmax = (start+end)/2, 
+                                           ymin = 0,
+                                           ymax = logFC, 
+                                           xmin = (start+end)/2,
+                                           color = contrast, 
+                                           shape = significant))
+  p <- p+ 
+    ggplot2::theme_bw()+
+    ggplot2::geom_point(position = ggplot2::position_dodge(width = 350), size = 3)+
+    ggplot2::geom_linerange(position = ggplot2::position_dodge(width = 350))+
+    ggplot2::xlab('Genome posiiton [bp]')+
+    ggplot2::ylab('RPKM')+
+    ggplot2::xlim(genes_all$start[1], genes_all$end[nrow(genes_all)])+
+    #ggplot2::scale_color_brewer(palette = 'Set1')+
+    ggplot2::theme(text = ggplot2::element_text(size = 15),
+                   legend.position = 'top')+
+    ggplot2::scale_shape_manual(values = c(1, 19))
+  
+  p_genes <- ggplot2::ggplot(genes_all, ggplot2::aes(xmin = start, xmax = end, fill = factor(strand), 
+                                                     forward = strand, label = gene, y = '')) +
+    gggenes::geom_gene_arrow(arrowhead_height = grid::unit(9, 'mm'),
+                             arrow_body_height = grid::unit(7, 'mm'))+
+    gggenes::geom_gene_label(grow = TRUE, reflow = TRUE, height = grid::unit(2, 'cm'))+
+    gggenes::theme_genes()+
+    ggplot2::theme(legend.position = 'none', text = ggplot2::element_text(size = 15))+
+    ggplot2::ylab('')
+  
+  #print(p)
+  
+  p <- p + p_genes + patchwork::plot_layout(ncol = 1, heights = c(10, 1))
+  
+  return(p)
 }
