@@ -291,6 +291,9 @@ app_server <- function( input, output, session ) {
       return(plot_heatmap_cluster())
     }
     
+    if(input$plot_type == 'logfc'){
+      return(plot_logFC())
+    }
     
   }) 
   

@@ -535,7 +535,8 @@ plot_rpkm_genes <- function(fitted, genes_positions, strains, fit,
   
   genes_all <- genes_positions %>% dplyr::filter(start <= end_g + flank & start >= start_g - flank |
                                                    end <= end_g + flank & end >= start_g - flank) %>%
-    dplyr::mutate(strand = ifelse(strand == '+', 1, -1))
+    dplyr::mutate(strand = ifelse(strand == '+', 1, -1),
+                  strand_plot = ifelse(strand == 1, TRUE, FALSE))
   
   if(format == 'RPKM'){
     
@@ -605,7 +606,7 @@ plot_rpkm_genes <- function(fitted, genes_positions, strains, fit,
     }
     
     p_genes <- ggplot2::ggplot(genes_all, ggplot2::aes(xmin = start, xmax = end, fill = factor(strand), 
-                                                       forward = strand, label = gene, y = '')) +
+                                                       forward = strand_plot, label = gene, y = '')) +
       gggenes::geom_gene_arrow(arrowhead_height = grid::unit(9, 'mm'),
                                arrow_body_height = grid::unit(7, 'mm'))+
       gggenes::geom_gene_label(grow = FALSE, reflow = TRUE, height = grid::unit(2, 'cm'))+
@@ -715,7 +716,8 @@ plot_logfc_genes <- function(logFC, genes_positions, contrasts,
   
   genes_all <- genes_positions %>% dplyr::filter(start <= end_g + flank & start >= start_g - flank |
                                                    end <= end_g + flank & end >= start_g - flank) %>%
-    dplyr::mutate(strand = ifelse(strand == '+', 1, -1))
+    dplyr::mutate(strand = ifelse(strand == '+', 1, -1),
+                  strand_plot = ifelse(strand == 1, TRUE, FALSE))
   
   #logFC <- data_adpA$data_all_notsig
   
@@ -750,7 +752,7 @@ plot_logfc_genes <- function(logFC, genes_positions, contrasts,
     ggplot2::scale_shape_manual(values = c(1, 19))
   
   p_genes <- ggplot2::ggplot(genes_all, ggplot2::aes(xmin = start, xmax = end, fill = factor(strand), 
-                                                     forward = strand, label = gene, y = '')) +
+                                                     forward = strand_plot, label = gene, y = '')) +
     gggenes::geom_gene_arrow(arrowhead_height = grid::unit(9, 'mm'),
                              arrow_body_height = grid::unit(7, 'mm'))+
     gggenes::geom_gene_label(grow = FALSE, reflow = TRUE, height = grid::unit(2, 'cm'))+
